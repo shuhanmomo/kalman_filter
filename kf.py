@@ -10,18 +10,32 @@ class KalmanFilter:
     def __init__(self, params: KFModel):
         self.params = params
         """Other initializations can go here"""
-        An, Bn = self.initialize_matrixes()
+        self.An, self.Bn = self.initialize_matrixes()
         self.Q = self.params.Q
         self.R = self.params.R
-        self.P = np.eye(4)
         self.X = np.zeros(4)
         self.X[0:2] = np.random.multivariate_normal(
             mean=np.zeros(2), cov=self.params.Lambda
         )
 
+        initial_position_cov = self.params.Lambda
+        initial_velocity_cov = np.eye(2) * 1e-1
+        self.P = np.block(
+            [
+                [
+                    initial_position_cov,
+                    np.zeros((2, 2)),
+                ],
+                [
+                    np.zeros((2, 2)),
+                    initial_velocity_cov,
+                ],
+            ]
+        )
+
     def initialize_matrixes(self) -> ArrayLike:
-        G = self.params.G()
-        delta = self.params.delta()
+        G = self.params.G
+        delta = self.params.delta
         # Extract G11, G12, G21, G22 from the matrix G
         G11, G12 = G[0, 0], G[0, 1]
         G21, G22 = G[1, 0], G[1, 1]
